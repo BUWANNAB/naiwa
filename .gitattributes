@@ -1,0 +1,10 @@
+* text=auto
+*.cs text eol=lf
+*.csproj text eol=lf
+*.md text eol=lf
+*.ps1 text eol=crlf
+*.png binary
+*.ico binary
+*.wav binary
+*.gif binary
+*.mp4 binary
