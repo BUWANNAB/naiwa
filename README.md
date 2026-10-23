@@ -2,6 +2,10 @@
 
 基于 C# / WPF 的 Windows 奶蛙桌宠。透明悬浮、离线运行，支持拖动捧腹大笑、双击打拳，以及“嘎嘎滴辣虾”“安迪”“噶脚塞”“加油”等语音互动。
 
+v1.2.0 新增“奶蛙的小窝”奶油圆角菜单：奶黄高亮、浅绿选中状态、独立语音入口，以及动作和音量子菜单；托盘菜单同步使用奶油配色。
+
+![奶蛙的小窝右键菜单](docs/milk-menu.png)
+
 ![待机与捧腹大笑](docs/animation-preview.gif)
 
 ## 玩法
@@ -62,7 +66,7 @@ powershell -ExecutionPolicy Bypass -File scripts/test.ps1 -Runtime
 
 默认执行交互状态回归测试和 Release 编译。`-Runtime` 还会启动短暂的桌宠窗口，验证音频解码、播放进度、动作匹配、循环笑声、单/双击、拖动中断、静音以及自然播放结束后的鼠标状态，报告写入 `qa/runtime-checks.json`。该检查需要可用的 Windows 桌面与媒体播放环境。
 
-本机审查构建通过 9 项交互状态测试与 39 项运行检查。具体报告见 [运行验证](docs/runtime-checks.json) 和 [审查记录](docs/review.md)。这些功能检查不等同于杀毒扫描。
+本机审查构建通过 9 项交互状态测试；v1.2.0 构建通过 42 项运行检查，包含菜单语音、静音和音量操作。具体报告见 [运行验证](docs/runtime-checks.json) 和 [审查记录](docs/review.md)。这些功能检查不等同于杀毒扫描。
 
 ## 安全与素材
 

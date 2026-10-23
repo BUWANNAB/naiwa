@@ -38,7 +38,10 @@
   "cancelClearsPendingClick": true,
   "voiceCompletionPreservesHeldPress": true,
   "heldPressCanDragAfterVoiceCompletion": true,
+  "menuVolumeChoiceWorks": true,
+  "menuMuteChoiceWorks": true,
+  "menuVoiceChoiceWorks": true,
   "ok": true,
-  "executableSha256": "CC9A3DF6A34A00451F860AC51AEB68125DEC188C83479324A1CD250CFAF0FCD6",
-  "version": "1.1.1"
+  "executableSha256": "B8AF9A24D9F82993DD0CF3EA1C34207712DBD26D9D9F646669CFDCC01311E68C",
+  "version": "1.2.0"
 }

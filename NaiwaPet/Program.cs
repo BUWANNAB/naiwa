@@ -73,7 +73,9 @@ public sealed class PetWindow : Window
     readonly bool testing;
     readonly PetSettings settings;
     readonly Forms.NotifyIcon? tray;
-    readonly MenuItem muteItem = new MenuItem { Header = "静音", IsCheckable = true };
+    readonly MenuItem muteItem = new MenuItem { Header = "暂时静音", IsCheckable = true, StaysOpenOnClick = true, Icon = MilkMenu.Icon("♫") };
+    readonly ContextMenu menu;
+    readonly MenuItem volumeMenu;
     string action = "idle";
     int frameIndex;
     double originLeft, originTop;
@@ -85,7 +87,7 @@ public sealed class PetWindow : Window
         testing = selfTest;
         Directory.CreateDirectory(dataDir);
         settings = selfTest ? new PetSettings { Muted = true } : ReadSettings();
-        Title = "奶蛙 · 语音动作版";
+        Title = "奶蛙 · 奶油菜单版";
         Width = 224; Height = 244;
         WindowStyle = WindowStyle.None;
         ResizeMode = ResizeMode.NoResize;
@@ -113,31 +115,39 @@ public sealed class PetWindow : Window
         ApplyVolume();
         muteItem.IsChecked = settings.Muted;
         muteItem.Click += (_, _) => SetMuted(muteItem.IsChecked);
-        var menu = new ContextMenu();
-        AddMenu(menu, "嘎嘎滴辣虾 · 打拳（双击）", (_, _) => BeginVoice("gaga"));
-        AddMenu(menu, "安迪 · 八卦", (_, _) => BeginVoice("andi"));
-        AddMenu(menu, "噶脚塞 · 打拳", (_, _) => BeginVoice("gajiao"));
-        AddMenu(menu, "加油 · 挥手", (_, _) => BeginVoice("ganba"));
+        menu = MilkMenu.Create();
+        MilkMenu.Section(menu, "奶蛙语音");
+        menu.Items.Add(MilkMenu.Item("嘎嘎滴辣虾", "✦", (_, _) => BeginVoice("gaga"), "奶蛙出拳 · 双击也能触发"));
+        menu.Items.Add(MilkMenu.Item("安迪", "♫", (_, _) => BeginVoice("andi"), "凑近一点，讲讲小八卦"));
+        menu.Items.Add(MilkMenu.Item("噶脚塞", "➜", (_, _) => BeginVoice("gajiao"), "再来一套奶蛙拳"));
+        menu.Items.Add(MilkMenu.Item("加油", "♡", (_, _) => BeginVoice("ganba"), "挥挥小手，给你打气"));
         menu.Items.Add(new Separator());
-        AddMenu(menu, "捧腹大笑", (_, _) => BeginLaugh());
-        AddMenu(menu, "恢复待机", (_, _) => StopLaugh());
-        AddMenu(menu, "挥手", (_, _) => { StopLaugh(); SetAction("wave"); });
-        AddMenu(menu, "睡觉", (_, _) => { StopLaugh(); SetAction("sleep"); });
-        menu.Items.Add(new Separator());
+        var actions = new MenuItem { Header = "动作小剧场", Icon = MilkMenu.Icon("☻") };
+        actions.Items.Add(MilkMenu.Item("捧腹大笑", "☺", (_, _) => BeginLaugh()));
+        actions.Items.Add(MilkMenu.Item("安静待机", "☁", (_, _) => StopLaugh()));
+        actions.Items.Add(MilkMenu.Item("挥挥小手", "♡", (_, _) => { StopLaugh(); SetAction("wave"); }));
+        actions.Items.Add(MilkMenu.Item("奶蛙睡觉", "☾", (_, _) => { StopLaugh(); SetAction("sleep"); }));
+        menu.Items.Add(actions);
         menu.Items.Add(muteItem);
-        var volumeMenu = new MenuItem { Header = "声音音量" };
+        volumeMenu = new MenuItem { Header = "奶声音量", Icon = MilkMenu.Icon("♪") };
         foreach (int value in new[] { 20, 45, 75, 100 }) {
             int level = value;
-            var item = new MenuItem { Header = $"{level}%" };
-            item.Click += (_, _) => { settings.Volume = level / 100.0; ApplyVolume(); SaveSettings(); };
+            var item = new MenuItem { Header = $"{level}%", IsCheckable = true, IsChecked = Math.Abs(settings.Volume - level / 100.0) < 0.001, StaysOpenOnClick = true, Tag = level };
+            item.Click += (_, _) => {
+                settings.Volume = level / 100.0;
+                foreach (MenuItem choice in volumeMenu.Items) choice.IsChecked = (int)choice.Tag == level;
+                ApplyVolume(); SaveSettings();
+            };
             volumeMenu.Items.Add(item);
         }
         menu.Items.Add(volumeMenu);
-        var top = new MenuItem { Header = "总在最前", IsCheckable = true, IsChecked = Topmost };
+        var top = new MenuItem { Header = "一直陪在最前面", Icon = MilkMenu.Icon("⌂"), IsCheckable = true, IsChecked = Topmost, StaysOpenOnClick = true };
         top.Click += (_, _) => { Topmost = settings.Topmost = top.IsChecked; SaveSettings(); };
         menu.Items.Add(top);
         menu.Items.Add(new Separator());
-        AddMenu(menu, "退出奶蛙", (_, _) => Close());
+        var exit = MilkMenu.Item("退出奶蛙 · 回窝啦", "⏻", (_, _) => Close());
+        exit.Foreground = new SolidColorBrush(Color.FromRgb(163, 100, 86));
+        menu.Items.Add(exit);
         surface.ContextMenu = menu;
         surface.MouseLeftButtonDown += OnPress;
         surface.MouseMove += OnMove;
@@ -150,9 +160,10 @@ public sealed class PetWindow : Window
             using var loadedIcon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!);
             tray = new Forms.NotifyIcon { Icon = (System.Drawing.Icon)(loadedIcon ?? System.Drawing.SystemIcons.Application).Clone(), Text = "奶蛙：拖动大笑 · 双击嘎嘎滴辣虾", Visible = !selfTest };
             var trayMenu = new Forms.ContextMenuStrip();
-            trayMenu.Items.Add("找到奶蛙", null, (_, _) => { Left = SystemParameters.WorkArea.Right - Width - 36; Top = SystemParameters.WorkArea.Bottom - Height - 20; Show(); Activate(); });
+            trayMenu.Items.Add("把奶蛙叫回来", null, (_, _) => { Left = SystemParameters.WorkArea.Right - Width - 36; Top = SystemParameters.WorkArea.Bottom - Height - 20; Show(); Activate(); });
             trayMenu.Items.Add("静音 / 恢复声音", null, (_, _) => SetMuted(!settings.Muted));
-            trayMenu.Items.Add("退出奶蛙", null, (_, _) => Close());
+            trayMenu.Items.Add("退出奶蛙 · 回窝啦", null, (_, _) => Close());
+            MilkMenu.StyleTray(trayMenu);
             tray.ContextMenuStrip = trayMenu;
         }
         Closed += (_, _) => { SaveSettings(); animation.Stop(); finishLaugh.Stop(); singleClick.Stop(); foreach (var player in sounds.Values) player.Close(); if (tray != null) { tray.Icon?.Dispose(); tray.Dispose(); } };
@@ -188,11 +199,6 @@ public sealed class PetWindow : Window
             image.EndInit(); image.Freeze(); result[i] = image;
         }
         frames.Add(state, result);
-    }
-
-    static void AddMenu(ContextMenu menu, string title, RoutedEventHandler handler)
-    {
-        var item = new MenuItem { Header = title }; item.Click += handler; menu.Items.Add(item);
     }
 
     void SetAction(string next)
@@ -380,6 +386,24 @@ public sealed class PetWindow : Window
             MovePointer(145, 145);
             checks["heldPressCanDragAfterVoiceCompletion"] = interaction.Dragging && action == "laugh";
             StopLaugh();
+            menu.PlacementTarget = surface; menu.IsOpen = true;
+            await Task.Delay(250); menu.UpdateLayout();
+            CaptureElement(menu, Path.Combine(folder, "milk-menu.png"));
+            volumeMenu.IsSubmenuOpen = true;
+            await Task.Delay(200);
+            var volumePopup = (System.Windows.Controls.Primitives.Popup)volumeMenu.Template.FindName("PART_Popup", volumeMenu);
+            CaptureElement((FrameworkElement)volumePopup.Child, Path.Combine(folder, "milk-volume.png"));
+            var volumeChoice = (MenuItem)volumeMenu.Items[2];
+            volumeChoice.IsChecked = true; volumeChoice.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            checks["menuVolumeChoiceWorks"] = Math.Abs(settings.Volume - 0.75) < 0.001 && volumeChoice.IsChecked;
+            volumeMenu.IsSubmenuOpen = false;
+            muteItem.IsChecked = false; muteItem.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            checks["menuMuteChoiceWorks"] = !settings.Muted && audio.Volume > 0;
+            SetMuted(true);
+            ((MenuItem)menu.Items[1]).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            await Task.Delay(250);
+            checks["menuVoiceChoiceWorks"] = activeSound == "gaga" && action == "punch";
+            StopLaugh(); menu.IsOpen = false;
             foreach (var entry in checks) if (entry.Value is bool passed && !passed) throw new Exception("Check failed: " + entry.Key);
             checks["ok"] = true;
             File.WriteAllText(Path.Combine(folder, "runtime-checks.json"), JsonSerializer.Serialize(checks, new JsonSerializerOptions { WriteIndented = true }));
@@ -396,6 +420,15 @@ public sealed class PetWindow : Window
         UpdateLayout();
         var bitmap = new RenderTargetBitmap((int)Width, (int)Height, 96, 96, PixelFormats.Pbgra32);
         bitmap.Render(surface);
+        var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        using var stream = File.Create(file); encoder.Save(stream);
+    }
+
+    static void CaptureElement(FrameworkElement element, string file)
+    {
+        element.UpdateLayout();
+        var bitmap = new RenderTargetBitmap((int)Math.Ceiling(element.ActualWidth), (int)Math.Ceiling(element.ActualHeight), 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(element);
         var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
         using var stream = File.Create(file); encoder.Save(stream);
     }
