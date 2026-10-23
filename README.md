@@ -2,6 +2,12 @@
 
 基于 C# / WPF 的 Windows 奶蛙桌宠。透明悬浮、离线运行，支持拖动捧腹大笑、双击打拳，以及“嘎嘎滴辣虾”“安迪”“噶脚塞”“加油”等语音互动。
 
+## 下载免安装版
+
+**[下载 Windows x64 免安装 EXE · v1.2.0](https://github.com/BUWANNAB/naiwa/releases/download/v1.2.0/NaiwaPet-v1.2.0-win-x64.exe)**
+
+下载后双击运行，无需安装 .NET。文件约 75 MiB；可在 [发布页面](https://github.com/BUWANNAB/naiwa/releases/tag/v1.2.0) 下载 `SHA256SUMS.txt` 校验文件。
+
 v1.2.0 新增“奶蛙的小窝”奶油圆角菜单：奶黄高亮、浅绿选中状态、独立语音入口，以及动作和音量子菜单；托盘菜单同步使用奶油配色。
 
 ![奶蛙的小窝右键菜单](docs/milk-menu.png)
